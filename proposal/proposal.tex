@@ -1,0 +1,131 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7em}
+\onehalfspacing
+\captionsetup[subfigure]{labelformat=empty}
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+\begin{document}
+\noindent
+\begin{minipage}[t]{0.6\textwidth}
+{\large\textbf{CMPS 351 -- Project 3}}\\[8pt]
+\textbf{Title:}  Discrete Optimization — Vertex Cover 
+\\
+\textbf{Students:} Ali Mohsen, Nanar Aintablian, Julia Dirawi\\ 
+\textbf{Date:} \today
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.35\textwidth}
+\raggedleft
+\includegraphics[width=0.75\linewidth]{AUBLOGO.png}
+\end{minipage}
+
+\vspace{0.3cm}
+\rule{\textwidth}{0.6pt}
+
+%-----------------------------------------------------------------------
+\section{Problem Statement}
+%-----------------------------------------------------------------------
+
+Given an undirected graph $G = (V, E)$, a \textit{vertex cover} is a subset
+$S \subseteq V$ such that for every edge $(u,v) \in E$, at least one endpoint
+belongs to $S$:
+\[
+(u,v) \in E \;\Rightarrow\; u \in S \;\text{or}\; v \in S.
+\]
+
+Intuitively, a vertex cover is a set of vertices such that every edge in the graph
+has at least one of its endpoints in the set. In other words, for each edge $(u,v)$,
+at least one of $u$ or $v$ is selected.
+
+The objective is to find a vertex cover of minimum size, i.e., a subset of vertices
+with the smallest possible cardinality that satisfies this property. This problem is
+known as the \textbf{Minimum Vertex Cover}.
+
+The \textbf{Minimum Vertex Cover} problem is NP-hard, making exact solutions computationally expensive for large graphs. This motivates the usage of optimization techniques and approximation algorithms.
+
+In this project, we study the problem using integer programming (\textbf{IP}), linear programming relaxation (\textbf{LP Relaxation}), and rounding techniques, both theoretically and experimentally.  
+
+%-----------------------------------------------------------------------
+\section{Proposed Approach}
+%-----------------------------------------------------------------------
+
+Our approach consists of the following four components:
+
+\textbf{1. Integer Programming (IP).}  
+We model the problem using binary decision variables $x_v \in \{0,1\}$ for each
+vertex $v \in V$, where $x_v = 1$ indicates that $v$ is included in the cover:
+\[
+\min \sum_{v \in V} x_v \quad \text{s.t.} \quad x_u + x_v \geq 1 \;\;\forall (u,v)\in E.
+\]
+
+\textbf{2. LP Relaxation.}  
+We relax the integrality constraint to $x_v \in [0,1]$. This gives us a linear program that can be solved efficiently, which provides a lower bound on the optimal vertex cover size and may assign fractional values to vertices.
+
+\textbf{3. Rounding Algorithm.}  
+We convert the fractional LP solution $x^*$ into an integral solution using
+threshold rounding:
+\[
+S = \{ v \in V : x_v^* \geq \tfrac{1}{2} \}.
+\]
+We will show that this guarantees a feasible vertex cover. Moreover, we will prove that this rounding scheme achieves a 2-approximation, i.e.,
+\[
+|S| \leq 2 \cdot \text{OPT}.
+\]
+
+\textbf{4. Experiments.}  
+We compare the performance of:
+\begin{itemize}[leftmargin=*]
+    \item LP relaxation with rounding
+    \item A greedy heuristic (selecting highest-degree vertices)
+    \item Exact ILP solutions (for small graphs)
+\end{itemize}
+
+%-----------------------------------------------------------------------
+\section{Graph Families}
+%-----------------------------------------------------------------------
+
+To evaluate performance across different structures, we consider the following
+graph families:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Random graphs} $G(n,p)$ with varying sizes and edge densities
+    \item \textbf{Grid graphs} to represent structured, sparse instances
+    \item \textbf{Bipartite graphs}, where the LP relaxation is known to behave tightly
+    \item \textbf{Cycle graphs}, especially odd cycles, to illustrate fractional solutions
+    \item \textbf{Dense graphs / near-cliques} to test behavior in highly connected settings
+\end{itemize}
+
+All graphs will be generated using \texttt{NetworkX}.
+
+%-----------------------------------------------------------------------
+\section{Evaluation Metrics}
+%-----------------------------------------------------------------------
+
+We will assess algorithm performance using the following metrics:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Solution size:} number of selected vertices
+    \item \textbf{Approximation ratio:} ratio between computed solution and optimal value
+    \item \textbf{Integrality gap:} ratio between integer optimum and LP optimum
+    \item \textbf{Runtime:} computational efficiency of each method
+\end{itemize}
+\end{document}
