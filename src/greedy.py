@@ -12,11 +12,11 @@ def greedy_vertex_cover(G):
         list: vertices selected by the greedy heuristic
     """
     remaining_graph = G.copy()  ## Create a copy of the original graph
-    cover = []  ## Stores the vertices selected for the cover
+    cover = set()  ## Stores the vertices selected for the cover
 
     while remaining_graph.number_of_edges() > 0:
-        v = max(remaining_graph.degree, key=lambda item: item[1])[0]  ## Select the vertex with highest degree
-        cover.append(v)
+        v = max(remaining_graph.nodes, key=lambda item: remaining_graph.degree(item))  ## Select the vertex with highest degree
+        cover.add(v)
         remaining_graph.remove_node(v)  ## Remove the selected vertex and all edges connected to it
 
     return cover
