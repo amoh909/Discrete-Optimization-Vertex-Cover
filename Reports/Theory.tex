@@ -1,0 +1,176 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,top=0.5in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7em}
+\onehalfspacing
+\captionsetup[subfigure]{labelformat=empty}
+
+
+\cfoot{\thepage}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+\begin{document}
+
+\noindent
+\begin{minipage}[t]{0.6\textwidth}
+{\large\textbf{CMPS 351 -- Project 3}}\\[8pt]
+\textbf{Title:} Discrete Optimization --- Vertex Cover \\
+\textbf{Students:} Ali Mohsen, Nanar Aintablian, Julia Dirawi
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.35\textwidth}
+\raggedleft
+\includegraphics[width=0.75\linewidth]{AUBLOGO.png}
+\end{minipage}
+
+\vspace{0.3cm}
+\rule{\textwidth}{0.6pt}
+
+%-----------------------------------------------------------------------
+\section{Feasibility of Threshold Rounding}
+%-----------------------------------------------------------------------
+
+\begin{theorem}\textbf{Theorem 1:} \label{thm:feasibility}
+Let $x^*$ be an optimal solution to the LP relaxation of the vertex cover problem. The set 
+\[
+S = \{v \in V \mid x^*_v \geq \tfrac{1}{2}\}
+\] 
+is a valid vertex cover for the graph $G = (V, E)$.
+\end{theorem}
+
+\noindent \textbf{Proof:}
+Let $x^*$ be an optimal solution to the LP relaxation of the vertex cover problem. We construct the set 
+\[
+S = \{v \in V : x_v^* \ge \tfrac{1}{2}\}.
+\]
+We show that $S$ is a valid vertex cover. Consider any edge $(u,v) \in E$. Since $x^*$ is a feasible solution to the LP, it must satisfy the edge constraint:
+\begin{equation}
+    x_u^* + x_v^*
+\end{equation}
+Assume, for contradiction, that $u \notin S$ and $v \notin S$. By the definition of the $S$, this implies:
+\[
+x_u^* < \tfrac{1}{2} \quad \text{and} \quad x_v^* < \tfrac{1}{2}.
+\]
+Adding these two inequalities yields:
+\[
+x_u^* + x_v^* < \tfrac{1}{2} + \tfrac{1}{2} = 1.
+\]
+This results in $x_u^* + x_v^* < 1$, which directly contradicts the constraint $x_u^* + x_v^* \ge 1$. 
+
+Thus, for every edge $(u,v) \in E$, at least one endpoint must have a value of at least $\tfrac{1}{2}$ and therefore belong to $S$. Therefore, $S$ is a valid vertex cover. \hfill $\square$
+
+%-----------------------------------------------------------------------
+\section{2-Approximation}
+%-----------------------------------------------------------------------
+\begin{theorem}\textbf{Theorem 2:} \label{thm:feasibility}
+Let $S = \{v \in V \mid x^*_v \geq \frac{1}{2}\}$ be the set obtained from the optimal LP solution $x^*$. Let $OPT$ denote the size of the minimum vertex cover. Then $|S| \leq 2 \cdot OPT$.
+\end{theorem}
+
+\noindent \textbf{Proof:}
+Let $x^*$ be the optimal solution for the LP relaxation of the Vertex Cover Problem. We show that the rounded cover $S$ satisfies $|S| \leq 2 \cdot \mathrm{OPT}$, where $\mathrm{OPT}$ denotes the size of a minimum vertex cover.
+
+By Theorem 1, $S = \{v \in V \mid x^*_v \geq \frac{1}{2}\}$ is a valid vertex cover.
+
+Let $\text{OPT}_{\text{LP}}$ be the value of the optimal fractional solution. Since the LP is a relaxation of the Integer Programming (IP) formulation, we have:
+\begin{equation}
+    \text{OPT}_{\text{LP}} = \sum_{v \in V} x^*_v \leq \text{OPT}
+\end{equation}
+
+By the definition of $S$, every vertex $v \in S$ satisfies $x^*_v \geq \frac{1}{2}$. Because all $x^*_v$ are non-negative, we get:
+\begin{equation}
+    \text{OPT}_{\text{LP}} = \sum_{v \in V} x^*_v \geq \sum_{v \in S} x^*_v
+\end{equation}
+Substituting the threshold condition $x^*_v \geq \frac{1}{2}$ into the summation:
+\begin{equation}
+   \text{OPT}_{\text{LP}} = \sum_{v \in V} x^*_v \geq \sum_{v \in S} \frac{1}{2} = \frac{1}{2} |S|
+\end{equation}
+Rearranging the inequality gives us:
+\begin{equation}
+    |S| \leq 2 \cdot \text{OPT}_{\text{LP}}
+\end{equation}
+
+Combining the inequality from Step 2, we get:
+\begin{equation}
+    |S| \leq 2 \cdot \text{OPT}_{\text{LP}} \leq 2 \cdot \text{OPT}
+\end{equation}
+Thus, this threshold rounding scheme is a $2$-approximation. \hfill $\square$
+
+\section{Integrality Gap}
+%-----------------------------------------------------------------------
+
+The integrality gap measures the worst-case ratio between the optimal integer solution and its linear relaxation:
+\[ \text{Gap} = \sup_G \frac{\text{OPT}}{\text{OPT}_{\text{LP}}} \]
+
+\subsection*{1. Theoretical Upper Bound}
+By Theorems 1 and 2, we know that for any graph $G$, the rounded solution $S$ is a valid vertex cover with a size satisfying:
+\begin{equation}
+    |S| \leq 2 \cdot \text{OPT}_{\text{LP}}
+\end{equation}
+
+Since $\text{OPT}$ is defined as the size of the minimum possible integer vertex cover, any specific valid vertex cover (such as $S$) must be at least as large as the optimum:
+\begin{equation}
+    \text{OPT} \leq |S|
+\end{equation}
+
+Combining these two inequalities, we obtain:
+\begin{equation}
+    \text{OPT} \leq |S| \leq 2 \cdot \text{OPT}_{\text{LP}}
+\end{equation}
+
+Dividing by $\text{OPT}_{\text{LP}}(G)$ yields:
+\begin{equation}
+    \frac{\text{OPT}}{\text{OPT}_{\text{LP}}} \leq 2
+\end{equation}
+Thus, the integrality gap of the standard LP relaxation is at most $2$.
+
+\subsection*{2. Tightness via Complete Graphs ($K_n$)}
+To show that this bound is tight, we consider the complete graph $K_n$ with $n$ vertices.
+
+\paragraph{Integer Optimum:} In a complete graph, if any two vertices are left unselected, the edge between them remains uncovered. Therefore, any valid integer vertex cover must contain at least $n-1$ vertices:
+\[ \text{OPT}(K_n) = n-1 \]
+
+\paragraph{LP Optimum:} Consider the fractional solution where $x_v = 1/2$ for all $v \in V$. For every edge $(u,v)$, the constraint $x_u + x_v \geq 1$ is satisfied as $1/2 + 1/2 = 1$. The objective value for this solution is $\sum_{v \in V} 1/2 = n/2$. 
+
+To prove this is the minimum possible value ($\text{OPT}_{\text{LP}}$), we sum every edge constraint $x_u + x_v \geq 1$ in the graph:
+\begin{equation}
+    \sum_{(u,v) \in E} (x_u + x_v) \geq \sum_{(u,v) \in E} 1
+\end{equation}
+
+On the right-hand side, there are $\binom{n}{2}$ edges in $K_n$. On the left-hand side, each variable $x_v$ appears exactly once for every edge incident to vertex $v$. Since each vertex in $K_n$ is connected to all other $(n-1)$ vertices, each $x_v$ appears $n-1$ times. The inequality would become:
+\begin{equation}
+    (n-1)x_1 + (n-1)x_2 + \dots + (n-1)x_n \geq \binom{n}{2}
+\end{equation}
+Factoring out $(n-1)$:
+\begin{equation}
+    (n-1) \sum_{v \in V} x_v \geq \frac{n(n-1)}{2}
+\end{equation}
+Dividing by $(n-1)$ proves that for any feasible solution:
+\begin{equation}
+    \sum_{v \in V} x_v \geq \frac{n}{2}
+\end{equation}
+Thus, $\text{OPT}_{\text{LP}}(K_n) = n/2$.
+
+Computing the ratio for $K_n$:
+\begin{equation}
+    \frac{\text{OPT}(K_n)}{\text{OPT}_{\text{LP}}(K_n)} = \frac{n-1}{n/2} = 2 - \frac{2}{n}
+\end{equation}
+As $n \to \infty$, this ratio approaches $2$. This demonstrates that the integrality gap of the standard LP relaxation for the Vertex Cover problem is exactly $2$. 
+%-----------------------------------------------------------------------
+
+\end{document}
