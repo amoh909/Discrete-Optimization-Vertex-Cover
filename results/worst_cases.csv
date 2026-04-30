@@ -1,0 +1,16 @@
+family,instance_name,n,m,density,lp_value,ilp_value,integrality_gap,rounded_size,rounded_vs_ilp_ratio,greedy_size,greedy_vs_ilp_ratio,worst_by
+complete,complete_n24,24,276,1.0,12.0,23.0,1.9166666666666667,24,1.0434782608695652,23,1.0,integrality_gap
+complete,complete_n20,20,190,1.0,10.0,19.0,1.9,20,1.0526315789473684,19,1.0,integrality_gap
+complete,complete_n16,16,120,1.0,8.0,15.0,1.875,16,1.0666666666666667,15,1.0,integrality_gap
+complete,complete_n12,12,66,1.0,6.0,11.0,1.8333333333333333,12,1.0909090909090908,11,1.0,integrality_gap
+complete,complete_n10,10,45,1.0,5.0,9.0,1.8,10,1.1111111111111112,9,1.0,integrality_gap
+random,random_n10_p0.5_t0,10,16,0.35555555555555557,5.0,5.0,1.0,10,2.0,5,1.0,rounded_vs_ilp_ratio
+random,random_n10_p0.5_t1,10,17,0.37777777777777777,5.0,5.0,1.0,10,2.0,6,1.2,rounded_vs_ilp_ratio
+random,random_n16_p0.15_t2,16,18,0.15,7.0,7.0,1.0,14,2.0,7,1.0,rounded_vs_ilp_ratio
+random,random_n16_p0.3_t1,16,30,0.25,8.0,8.0,1.0,16,2.0,8,1.0,rounded_vs_ilp_ratio
+random,random_n24_p0.15_t1,24,43,0.15579710144927536,12.0,12.0,1.0,24,2.0,12,1.0,rounded_vs_ilp_ratio
+grid,grid_3x3,9,12,0.3333333333333333,4.0,4.0,1.0,4,1.0,5,1.25,greedy_vs_ilp_ratio
+random,random_n10_p0.3_t1,10,13,0.28888888888888886,4.0,4.0,1.0,4,1.0,5,1.25,greedy_vs_ilp_ratio
+random,random_n10_p0.5_t1,10,17,0.37777777777777777,5.0,5.0,1.0,10,2.0,6,1.2,greedy_vs_ilp_ratio
+bipartite,bipartite_12x12_p0.5_t1,24,70,0.2536231884057971,12.0,12.0,1.0,12,1.0,13,1.0833333333333333,greedy_vs_ilp_ratio
+grid,grid_5x5,25,40,0.13333333333333333,12.0,12.0,1.0,12,1.0,13,1.0833333333333333,greedy_vs_ilp_ratio

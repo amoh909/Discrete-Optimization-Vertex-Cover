@@ -123,7 +123,7 @@ def build_experiment_suite() -> List[Dict]:
                 "name":       f"bipartite_{n_left}x{n_right}_p{p}_t{trial}",
                 "parity":     None,
                 "generator":  generate_bipartite_graph,
-                "kwargs": {"n1": n_left, "n2": n_right, "p": p, "seed": seed},
+                "kwargs": {"n": n_left, "m": n_right, "p": p, "seed": seed},
                 "gen_params": {"n_left": n_left, "n_right": n_right,
                                "p": p, "seed": seed, "trial": trial},
             })

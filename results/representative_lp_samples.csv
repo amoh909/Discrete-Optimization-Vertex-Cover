@@ -1,0 +1,5 @@
+family,instance_name,n,m,lp_value,ilp_value,integrality_gap,lp_num_fractional,lp_num_at_half,lp_is_integral,rounded_size,rounded_vs_ilp_ratio,greedy_size,greedy_vs_ilp_ratio
+cycle,cycle_n5_odd,5,5,2.5,3.0,1.2,5,5,False,5,1.6666666666666667,3,1.0
+cycle,cycle_n6_even,6,6,3.0,3.0,1.0,0,0,True,3,1.0,3,1.0
+complete,complete_n24,24,276,12.0,23.0,1.9166666666666667,24,24,False,24,1.0434782608695652,23,1.0
+bipartite,bipartite_6x6_p0.3_t1,12,8,5.0,5.0,1.0,0,0,True,5,1.0,5,1.0
