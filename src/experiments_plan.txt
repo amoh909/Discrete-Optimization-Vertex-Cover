@@ -1,0 +1,53 @@
+metrics:
+graph_family
+graph_name
+n = number of vertices
+m = number of edges
+lp_value
+rounded_size
+greedy_size
+ilp_opt
+rounding_ratio = rounded_size / ilp_opt
+greedy_ratio = greedy_size / ilp_opt
+integrality_gap = ilp_opt / lp_value
+lp_runtime
+ilp_runtime
+rounding_runtime
+greedy_runtime
+
+Simple Initial Graphs:
+single_edge
+path_3
+triangle
+cycle_4
+cycle_5
+complete_5
+grid_3x3
+
+Random Graphs:
+n = 10, 20, 30
+p = 0.2, 0.5, 0.8, 0.9 (0.8 and 0.9 to get denser graphs)
+seeds = seeds = 0, 1, 2, 3, 4
+so 3 * 3 * 5 = 45 random graphs
+
+Grid Graphs:
+3x3
+4x4
+5x5
+6x6
+
+Bipartite Graphs:
+n1 = n2 = 5, 10, 15
+p = 0.2, 0.5, 0.8
+seeds = 0, 1, 2, 3, 4
+
+Cycle Graphs:
+n = 3, 4, 5, 7, 9, 11, 15
+
+Near-cliques:
+n = 10, 20, 30
+p = 0.8, 0.9
+seeds = 0, 1, 2, 3, 4
+
+
+
