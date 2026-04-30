@@ -20,13 +20,10 @@ from src.rounding import threshold_rounding
 from src.greedy import greedy_vertex_cover
 
 
-def is_vertex_cover(G: nx.Graph, cover) -> bool:
-    cover_set = set(cover)
-    return all(u in cover_set or v in cover_set for u, v in G.edges())
+from src.utils import is_vertex_cover
 
 
-def cover_size(cover) -> int:
-    return len(set(cover))
+from src.utils import cover_size
 
 
 # Thin timing wrappers
@@ -126,7 +123,7 @@ def build_experiment_suite() -> List[Dict]:
                 "name":       f"bipartite_{n_left}x{n_right}_p{p}_t{trial}",
                 "parity":     None,
                 "generator":  generate_bipartite_graph,
-                "kwargs":     {"n": n_left, "m": n_right, "p": p, "seed": seed},
+                "kwargs": {"n1": n_left, "n2": n_right, "p": p, "seed": seed},
                 "gen_params": {"n_left": n_left, "n_right": n_right,
                                "p": p, "seed": seed, "trial": trial},
             })
@@ -268,12 +265,16 @@ def run_single_experiment(
     rounded_cover = threshold_rounding(x_values)
     rounding_runtime = time.perf_counter() - t0
     rounded_feasible = is_vertex_cover(G, rounded_cover)
+    if not rounded_feasible:
+        raise RuntimeError(f"Rounding failed on {instance_name}")
     rounded_size     = cover_size(rounded_cover)
     rounded_vs_lp    = (rounded_size / lp_value) if lp_value > 0 else float("nan")
 
     #Greedy heuristic
     greedy_cover, greedy_runtime = _timed_greedy(G)
     greedy_feasible = is_vertex_cover(G, greedy_cover)  
+    if not greedy_feasible:
+        raise RuntimeError(f"Greedy failed on {instance_name}")
     greedy_size     = cover_size(greedy_cover)
     greedy_vs_lp    = (greedy_size / lp_value) if lp_value > 0 else float("nan")
 
@@ -293,6 +294,12 @@ def run_single_experiment(
 
         ilp_value = float(ilp_result["objective"])
         ilp_runtime = float(ilp_t)
+
+        # Check relaxation property: LP optimum should never exceed ILP optimum
+        if lp_value > ilp_value + 1e-9:
+            raise RuntimeError(
+                f"LP > ILP on {instance_name}: LP={lp_value}, ILP={ilp_value}"
+            )
 
         if ilp_value > 0:
             rounded_vs_ilp_ratio = rounded_size / ilp_value

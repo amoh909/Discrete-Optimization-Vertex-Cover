@@ -1,53 +1,21 @@
-metrics:
-graph_family
-graph_name
-n = number of vertices
-m = number of edges
-lp_value
-rounded_size
-greedy_size
-ilp_opt
-rounding_ratio = rounded_size / ilp_opt
-greedy_ratio = greedy_size / ilp_opt
-integrality_gap = ilp_opt / lp_value
-lp_runtime
-ilp_runtime
-rounding_runtime
-greedy_runtime
+- Random graphs G(n, p) with:
+  - n ∈ {10, 16, 24, 32}
+  - p ∈ {0.15, 0.30, 0.50, 0.80, 0.90}
+  - 3 trials per configuration
 
-Simple Initial Graphs:
-single_edge
-path_3
-triangle
-cycle_4
-cycle_5
-complete_5
-grid_3x3
+- Grid graphs:
+  - 3×3, 4×4, 5×5, 4×6
 
-Random Graphs:
-n = 10, 20, 30
-p = 0.2, 0.5, 0.8, 0.9 (0.8 and 0.9 to get denser graphs)
-seeds = seeds = 0, 1, 2, 3, 4
-so 3 * 3 * 5 = 45 random graphs
+- Bipartite graphs:
+  - (n1, n2, p) = (6,6,0.3), (8,8,0.4), (10,12,0.3), (12,12,0.5)
+  - 2 trials per configuration
 
-Grid Graphs:
-3x3
-4x4
-5x5
-6x6
+- Cycle graphs:
+  - n ∈ {5, 6, 7, 8, 9, 10, 11, 15}
 
-Bipartite Graphs:
-n1 = n2 = 5, 10, 15
-p = 0.2, 0.5, 0.8
-seeds = 0, 1, 2, 3, 4
+- Complete graphs:
+  - n ∈ {4, 6, 8, 10, 12, 16, 20, 24}
 
-Cycle Graphs:
-n = 3, 4, 5, 7, 9, 11, 15
-
-Near-cliques:
-n = 10, 20, 30
-p = 0.8, 0.9
-seeds = 0, 1, 2, 3, 4
-
-
-
+- Near-cliques:
+  - n ∈ {12, 16, 20}
+  - edge removal fractions ∈ {0.10, 0.15, 0.20}
