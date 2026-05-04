@@ -59,13 +59,14 @@ runtime_cols = ["lp_runtime_sec", "rounding_runtime_sec", "greedy_runtime_sec"]
 
 runtime_means = df[runtime_cols].mean()
 
-plt.figure()
+plt.figure(figsize=(8, 5))
 runtime_means.plot(kind='bar')
 plt.ylabel("Average Runtime (seconds)")
 plt.title("Runtime Comparison")
-plt.xticks(rotation=30)
-plt.grid()
-plt.savefig(f"{OUTPUT_DIR}/runtime.png")
+plt.xticks(rotation=30, ha="right")
+plt.grid(axis="y")
+plt.tight_layout()
+plt.savefig(f"{OUTPUT_DIR}/runtime.png", bbox_inches="tight")
 plt.close()
 
 
