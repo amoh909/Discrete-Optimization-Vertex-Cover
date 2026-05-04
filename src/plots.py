@@ -9,21 +9,23 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 df = pd.read_csv(RESULTS_PATH)
 
-# 1. Integrality Gap vs n (Complete Graphs)
-df_complete = df[df["family"] == "complete"]
+# 1. Integrality Gap vs n (Complete Graphs) — with theory curve
+df_complete = df[df["family"] == "complete"].dropna(subset=["integrality_gap"])
 
 plt.figure()
-plt.plot(df_complete["n"], df_complete["integrality_gap"], marker='o')
+plt.plot(df_complete["n"], df_complete["integrality_gap"], marker='o', label="Empirical gap")
+plt.plot(df_complete["n"], 2 - 2 / df_complete["n"], linestyle='--', label="Theory: 2 − 2/n")
 plt.xlabel("Number of vertices (n)")
 plt.ylabel("Integrality Gap (ILP / LP)")
 plt.title("Integrality Gap for Complete Graphs")
+plt.legend()
 plt.grid()
 plt.savefig(f"{OUTPUT_DIR}/complete_gap.png")
 plt.close()
 
 
 # 2. Random graphs: ratio vs density
-df_random = df[df["family"] == "random"]
+df_random = df[df["family"] == "random"].dropna(subset=["rounded_vs_ilp_ratio", "greedy_vs_ilp_ratio"])
 
 grouped = df_random.groupby("param_p").mean(numeric_only=True)
 
@@ -65,5 +67,21 @@ plt.xticks(rotation=30)
 plt.grid()
 plt.savefig(f"{OUTPUT_DIR}/runtime.png")
 plt.close()
+
+
+# 5. Cycle graphs — LP value and rounded size by parity
+df_cycle = df[df["family"] == "cycle"].sort_values("n")
+
+plt.figure()
+for parity, grp in df_cycle.groupby("parity"):
+    plt.plot(grp["n"], grp["lp_value"], marker='o', label=f"{parity} (LP)")
+plt.xlabel("Cycle size (n)")
+plt.ylabel("LP Objective")
+plt.title("LP Objective: Odd vs Even Cycles")
+plt.legend()
+plt.grid()
+plt.savefig(f"{OUTPUT_DIR}/cycles_lp.png")
+plt.close()
+
 
 print("Plots saved in:", OUTPUT_DIR)

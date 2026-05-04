@@ -18,13 +18,8 @@ from src.lp_solver import solve_vertex_cover_lp
 from src.ilp_solver import solve_vertex_cover_ilp
 from src.rounding import threshold_rounding
 from src.greedy import greedy_vertex_cover
-
-
 from src.utils import is_vertex_cover
-
-
 from src.utils import cover_size
-
 
 # Thin timing wrappers
 def _timed_lp(G: nx.Graph):
@@ -52,7 +47,14 @@ def graph_density(G: nx.Graph) -> float:
     return 2.0 * G.number_of_edges() / (n * (n - 1))
 
 
-_FRAC_EPS = 1e-6  
+# Tight epsilon for detecting 0/1 boundaries (lp_num_fractional, lp_is_integral)
+_FRAC_EPS = 1e-6
+
+# Looser epsilon specifically for detecting values at exactly 1/2.
+# LP solvers (e.g. CBC) can return 0.499999 or 0.500001 for what is
+# mathematically 0.5, so 1e-4 is safer here without any risk of
+# misclassifying true 0/1 values (which are never this close to 0.5).
+_HALF_EPS = 1e-4
 
 
 def lp_num_fractional(x_values: dict) -> int:
@@ -65,13 +67,12 @@ def lp_num_fractional(x_values: dict) -> int:
 
 def lp_num_at_half(x_values: dict) -> int:
     """Count vertices whose LP value is exactly 1/2 (within tolerance)."""
-    return sum(1 for v in x_values.values() if abs(v - 0.5) < _FRAC_EPS)
+    return sum(1 for v in x_values.values() if abs(v - 0.5) < _HALF_EPS)
 
 
 def lp_is_integral(x_values: dict) -> bool:
     """True iff the LP solution is already 0/1 integral."""
     return lp_num_fractional(x_values) == 0
-
 
 
 # Experiment suite definition
@@ -83,10 +84,9 @@ def build_experiment_suite() -> List[Dict]:
         parity      : str | None  - "odd"/"even" for cycles
         generator   : callable
         kwargs      : dict  - passed to the generator
-        gen_params  : dict  - explicit reproducibility metadata [FIX #7]
+        gen_params  : dict  - explicit reproducibility metadata
     """
     specs: List[Dict] = []
-
 
     # 1. Random graphs G(n, p)  -  sparse, medium, dense
     for n in [10, 16, 24, 32]:
@@ -101,7 +101,6 @@ def build_experiment_suite() -> List[Dict]:
                     "kwargs":     {"n": n, "p": p, "seed": seed},
                     "gen_params": {"n": n, "p": p, "seed": seed, "trial": trial},
                 })
-
 
     # 2. Grid graphs
     for rows, cols in [(3, 3), (4, 4), (5, 5), (4, 6)]:
@@ -123,13 +122,12 @@ def build_experiment_suite() -> List[Dict]:
                 "name":       f"bipartite_{n_left}x{n_right}_p{p}_t{trial}",
                 "parity":     None,
                 "generator":  generate_bipartite_graph,
-                "kwargs": {"n": n_left, "m": n_right, "p": p, "seed": seed},
+                "kwargs":     {"n": n_left, "m": n_right, "p": p, "seed": seed},
                 "gen_params": {"n_left": n_left, "n_right": n_right,
                                "p": p, "seed": seed, "trial": trial},
             })
 
-
-    #Cycle graphs - odd and even
+    # Cycle graphs - odd and even
     for n in [5, 6, 7, 8, 9, 10, 11, 15]:
         parity = "odd" if n % 2 == 1 else "even"
         specs.append({
@@ -141,8 +139,7 @@ def build_experiment_suite() -> List[Dict]:
             "gen_params": {"n": n, "parity": parity},
         })
 
-
-    #Complete graphs K_n
+    # Complete graphs K_n
     for n in [4, 6, 8, 10, 12, 16, 20, 24]:
         specs.append({
             "family":     "complete",
@@ -153,8 +150,7 @@ def build_experiment_suite() -> List[Dict]:
             "gen_params": {"n": n},
         })
 
-
-    #Near-cliques
+    # Near-cliques
     for n, missing_frac, trial in [
         (12, 0.10, 0), (16, 0.15, 0), (20, 0.20, 0), (20, 0.10, 1)
     ]:
@@ -175,7 +171,7 @@ def build_experiment_suite() -> List[Dict]:
 # Result container
 @dataclass
 class ExperimentRow:
-    #identity 
+    # identity
     family:                str
     instance_name:         str
     parity:                Optional[str]
@@ -196,39 +192,38 @@ class ExperimentRow:
     m:                     int
     density:               float
 
-    #LP relaxation 
+    # LP relaxation
     lp_value:              float
     lp_runtime_sec:        float
 
-    #LP solution structure 
-    lp_num_fractional:     int   
-    lp_num_at_half:        int   
-    lp_is_integral:        bool  
+    # LP solution structure
+    lp_num_fractional:     int
+    lp_num_at_half:        int
+    lp_is_integral:        bool
 
-    #threshold rounding 
+    # threshold rounding
     rounded_size:          int
     rounded_feasible:      bool
-    rounded_vs_lp_ratio:   float  
+    rounded_vs_lp_ratio:   float
     rounding_runtime_sec:  float
 
-    # greedy 
+    # greedy
     greedy_size:           int
-    greedy_feasible:       bool   
+    greedy_feasible:       bool
     greedy_runtime_sec:    float
     greedy_vs_lp_ratio:    float
 
-    # exact ILP (small graphs only) 
+    # exact ILP (small graphs only)
     ilp_value:             Optional[float]
     ilp_runtime_sec:       Optional[float]
     rounded_vs_ilp_ratio:  Optional[float]
     greedy_vs_ilp_ratio:   Optional[float]
-    integrality_gap:       Optional[float] 
+    integrality_gap:       Optional[float]
 
 
 def _gp(gen_params: Dict, key: str):
     """Safely extract a key from gen_params, returning None if absent."""
     return gen_params.get(key, None)
-
 
 
 # Single-instance experiment
@@ -245,7 +240,7 @@ def run_single_experiment(
 ) -> ExperimentRow:
     n = G.number_of_nodes()
 
-    #LP relaxation 
+    # LP relaxation
     lp_result, lp_runtime = _timed_lp(G)
     if lp_result["status"] != "Optimal":
         raise RuntimeError(
@@ -255,30 +250,30 @@ def run_single_experiment(
     lp_value = float(lp_result["objective"])
     x_values = lp_result["x_values"]
 
-    #LP solution structure 
+    # LP solution structure
     num_frac    = lp_num_fractional(x_values)
     num_at_half = lp_num_at_half(x_values)
     is_intgl    = lp_is_integral(x_values)
 
-    #Threshold rounding 
+    # Threshold rounding
     t0 = time.perf_counter()
     rounded_cover = threshold_rounding(x_values)
     rounding_runtime = time.perf_counter() - t0
     rounded_feasible = is_vertex_cover(G, rounded_cover)
     if not rounded_feasible:
         raise RuntimeError(f"Rounding failed on {instance_name}")
-    rounded_size     = cover_size(rounded_cover)
-    rounded_vs_lp    = (rounded_size / lp_value) if lp_value > 0 else float("nan")
+    rounded_size  = cover_size(rounded_cover)
+    rounded_vs_lp = (rounded_size / lp_value) if lp_value > 0 else float("nan")
 
-    #Greedy heuristic
+    # Greedy heuristic
     greedy_cover, greedy_runtime = _timed_greedy(G)
-    greedy_feasible = is_vertex_cover(G, greedy_cover)  
+    greedy_feasible = is_vertex_cover(G, greedy_cover)
     if not greedy_feasible:
         raise RuntimeError(f"Greedy failed on {instance_name}")
-    greedy_size     = cover_size(greedy_cover)
-    greedy_vs_lp    = (greedy_size / lp_value) if lp_value > 0 else float("nan")
+    greedy_size  = cover_size(greedy_cover)
+    greedy_vs_lp = (greedy_size / lp_value) if lp_value > 0 else float("nan")
 
-    #Exact ILP (small graphs only)
+    # Exact ILP (small graphs only)
     ilp_value            = None
     ilp_runtime          = None
     rounded_vs_ilp_ratio = None
@@ -292,10 +287,10 @@ def run_single_experiment(
                 f"ILP failed on {instance_name}: status={ilp_result['status']}"
             )
 
-        ilp_value = float(ilp_result["objective"])
+        ilp_value   = float(ilp_result["objective"])
         ilp_runtime = float(ilp_t)
 
-        # Check relaxation property: LP optimum should never exceed ILP optimum
+        # Sanity check: LP relaxation must be a lower bound on ILP
         if lp_value > ilp_value + 1e-9:
             raise RuntimeError(
                 f"LP > ILP on {instance_name}: LP={lp_value}, ILP={ilp_value}"
@@ -303,14 +298,14 @@ def run_single_experiment(
 
         if ilp_value > 0:
             rounded_vs_ilp_ratio = rounded_size / ilp_value
-            greedy_vs_ilp_ratio = greedy_size / ilp_value
-            integrality_gap = ilp_value / lp_value if lp_value > 0 else float("nan")
-            
+            greedy_vs_ilp_ratio  = greedy_size  / ilp_value
+            integrality_gap      = ilp_value / lp_value if lp_value > 0 else float("nan")
+
     return ExperimentRow(
         family                = family,
         instance_name         = instance_name,
         parity                = parity,
-        # reproducibility 
+        # reproducibility
         param_n               = _gp(gen_params, "n"),
         param_p               = _gp(gen_params, "p"),
         param_seed            = _gp(gen_params, "seed"),
@@ -334,7 +329,7 @@ def run_single_experiment(
         # rounding
         rounded_size          = rounded_size,
         rounded_feasible      = bool(rounded_feasible),
-        rounding_runtime_sec = rounding_runtime,
+        rounding_runtime_sec  = rounding_runtime,
         rounded_vs_lp_ratio   = rounded_vs_lp,
         # greedy
         greedy_size           = greedy_size,
@@ -348,7 +343,6 @@ def run_single_experiment(
         greedy_vs_ilp_ratio   = greedy_vs_ilp_ratio,
         integrality_gap       = integrality_gap,
     )
-
 
 
 # Batch runner
@@ -388,7 +382,6 @@ def run_all_experiments(
     df = df.sort_values(["family", "n", "m", "instance_name"]).reset_index(drop=True)
     df.to_csv(output_path / "experiment_results.csv", index=False)
 
-
     agg_cols = {
         "instances":                ("instance_name",        "count"),
         "avg_n":                    ("n",                    "mean"),
@@ -405,6 +398,7 @@ def run_all_experiments(
         "avg_rounded_vs_lp_ratio":  ("rounded_vs_lp_ratio",  "mean"),
         "max_rounded_vs_lp_ratio":  ("rounded_vs_lp_ratio",  "max"),
         "avg_lp_runtime_sec":       ("lp_runtime_sec",       "mean"),
+        "avg_rounding_runtime_sec": ("rounding_runtime_sec", "mean"),
         "avg_greedy_runtime_sec":   ("greedy_runtime_sec",   "mean"),
         "avg_ilp_runtime_sec":      ("ilp_runtime_sec",      "mean"),
         "pct_lp_integral":          ("lp_is_integral",       "mean"),  
@@ -416,29 +410,28 @@ def run_all_experiments(
     )
     summary_fam.to_csv(output_path / "summary_by_family.csv", index=False)
 
-
     summary_size = (
         df.groupby(["family", "n"], dropna=False)
           .agg(
-              instances           = ("instance_name",        "count"),
-              avg_m               = ("m",                    "mean"),
-              avg_lp_value        = ("lp_value",             "mean"),
-              avg_rounded_size    = ("rounded_size",         "mean"),
-              avg_greedy_size     = ("greedy_size",          "mean"),
-              avg_ilp_value       = ("ilp_value",            "mean"),
-              avg_integrality_gap = ("integrality_gap",      "mean"),
-              max_integrality_gap = ("integrality_gap",      "max"),
-              avg_rounded_vs_ilp  = ("rounded_vs_ilp_ratio", "mean"),
-              avg_rounded_vs_lp   = ("rounded_vs_lp_ratio",  "mean"),
-              max_rounded_vs_lp   = ("rounded_vs_lp_ratio",  "max"),
-              pct_lp_integral     = ("lp_is_integral",       "mean"),  
+              instances                = ("instance_name",        "count"),
+              avg_m                    = ("m",                    "mean"),
+              avg_lp_value             = ("lp_value",             "mean"),
+              avg_rounded_size         = ("rounded_size",         "mean"),
+              avg_rounding_runtime_sec = ("rounding_runtime_sec", "mean"),
+              avg_greedy_size          = ("greedy_size",          "mean"),
+              avg_ilp_value            = ("ilp_value",            "mean"),
+              avg_integrality_gap      = ("integrality_gap",      "mean"),
+              max_integrality_gap      = ("integrality_gap",      "max"),
+              avg_rounded_vs_ilp       = ("rounded_vs_ilp_ratio", "mean"),
+              avg_rounded_vs_lp        = ("rounded_vs_lp_ratio",  "mean"),
+              max_rounded_vs_lp        = ("rounded_vs_lp_ratio",  "max"),
+              pct_lp_integral          = ("lp_is_integral",       "mean"),
           )
           .reset_index()
     )
     summary_size.to_csv(output_path / "summary_by_family_and_size.csv", index=False)
 
     return df
-
 
 
 # Theory validation
@@ -448,7 +441,7 @@ def validate_theory(df: pd.DataFrame) -> pd.DataFrame:
 
     Checks:
       1. rounded_feasible == True      (rounding always gives a valid cover)
-      2. greedy_feasible  == True      (greedy  always gives a valid cover) [FIX #1]
+      2. greedy_feasible  == True      (greedy  always gives a valid cover)
       3. rounded_vs_lp_ratio  <= 2     (formal 2-approximation proof)
       4. rounded_vs_ilp_ratio <= 2     (empirical confirmation against ILP)
 
@@ -456,7 +449,7 @@ def validate_theory(df: pd.DataFrame) -> pd.DataFrame:
     """
     c = df.copy()
     c["rnd_feasible_ok"] = c["rounded_feasible"]
-    c["grd_feasible_ok"] = c["greedy_feasible"]                           
+    c["grd_feasible_ok"] = c["greedy_feasible"]
     c["lp_ratio_ok"]     = (c["rounded_vs_lp_ratio"].isna()  |
                             (c["rounded_vs_lp_ratio"]  <= 2.0 + 1e-9))
     c["ilp_ratio_ok"]    = (c["rounded_vs_ilp_ratio"].isna() |
@@ -466,7 +459,7 @@ def validate_theory(df: pd.DataFrame) -> pd.DataFrame:
     return c.loc[~all_ok].copy()
 
 
-# Worst-case extractor 
+# Worst-case extractor
 def worst_cases(df: pd.DataFrame, top_k: int = 5) -> pd.DataFrame:
     """
     Returns the top-k worst instances across three axes:
@@ -497,15 +490,12 @@ def worst_cases(df: pd.DataFrame, top_k: int = 5) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-
 # Report printer
-
 def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
     with_ilp = df[df["ilp_value"].notna()].copy()
     sep = "=" * 65
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-
 
     # Theory validation
     print(f"\n{sep}")
@@ -535,8 +525,7 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
             "rounded_vs_lp_ratio", "rounded_vs_ilp_ratio",
         ]].to_string(index=False))
 
-  
-    #Overall averages
+    # Overall averages
     print(f"\n{sep}")
     print("OVERALL AVERAGES  (instances with exact ILP available)")
     print(sep)
@@ -545,7 +534,6 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
         print(f"  Max integrality gap  (ILP/LP) : {with_ilp['integrality_gap'].max():.4f}")
         print(f"  Avg rounded / ILP             : {with_ilp['rounded_vs_ilp_ratio'].mean():.4f}")
         print(f"  Avg greedy  / ILP             : {with_ilp['greedy_vs_ilp_ratio'].mean():.4f}")
-
 
     # Complete graphs - gap approaching 2
     print(f"\n{sep}")
@@ -564,7 +552,6 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
             print(f"  {ni:>4}  {row['ilp_value']:>6.1f}  {row['lp_value']:>6.1f}"
                   f"  {gap:>14.4f}  {th:>14.4f}")
 
-
     # Bipartite - LP tight (gap = 1)
     print(f"\n{sep}")
     print("BIPARTITE GRAPHS  -  LP is tight (integrality gap should = 1)")
@@ -580,7 +567,6 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
         for _, row in bip.iterrows():
             print(f"  {row['instance_name']:45s}  {row['ilp_value']:>6.1f}"
                   f"  {row['lp_value']:>6.1f}  {row['integrality_gap']:>6.4f}")
-
 
     # Cycles - LP variable structure
     print(f"\n{sep}")
@@ -608,7 +594,6 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
         print("\n  Expected: odd cycles usually give half-integral LP optima")
         print("            even cycles often have an integral LP optimum")
 
-
     # Random graphs by p
     print(f"\n{sep}")
     print("RANDOM GRAPHS  -  approximation ratio by edge probability p")
@@ -634,7 +619,7 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
                   f"  {row['avg_rounded_vs_ilp']:>12.4f}"
                   f"  {row['avg_greedy_vs_ilp']:>12.4f}")
 
-    #Greedy vs rounding comparison
+    # Greedy vs rounding comparison
     print(f"\n{sep}")
     print("GREEDY VS ROUNDING  -  which performs better?")
     print(sep)
@@ -663,8 +648,7 @@ def print_report_notes(df: pd.DataFrame, output_dir: str = "results") -> None:
         print("\n  By family:")
         print(by_family.to_string(index=False))
 
-
-    #Worst-case instances
+    # Worst-case instances
     print(f"\n{sep}")
     print("WORST-CASE INSTANCES  [top 5 per criterion]")
     print(sep)
@@ -730,8 +714,6 @@ def save_representative_lp_samples(df: pd.DataFrame, output_dir: str = "results"
         "greedy_size", "greedy_vs_ilp_ratio"
     ]]
     rep.to_csv(output_path / "representative_lp_samples.csv", index=False)
-
-
 
 
 # Main
