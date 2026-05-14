@@ -1,3 +1,4 @@
+# Generates plots comparing solver performance, approximation ratios, and integrality gaps.
 import pandas as pd
 import matplotlib.pyplot as plt
 import os

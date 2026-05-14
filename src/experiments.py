@@ -1,3 +1,4 @@
+# Experiment runner: benchmarks LP, ILP, rounding, and greedy across all graph families.
 import time
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional
@@ -21,7 +22,7 @@ from src.greedy import greedy_vertex_cover
 from src.utils import is_vertex_cover
 from src.utils import cover_size
 
-# Thin timing wrappers
+
 def _timed_lp(G: nx.Graph):
     t0 = time.perf_counter()
     result = solve_vertex_cover_lp(G)
@@ -39,7 +40,7 @@ def _timed_greedy(G: nx.Graph):
     cover = greedy_vertex_cover(G)
     return cover, time.perf_counter() - t0
 
-# Graph-density helper
+
 def graph_density(G: nx.Graph) -> float:
     n = G.number_of_nodes()
     if n <= 1:
@@ -47,13 +48,9 @@ def graph_density(G: nx.Graph) -> float:
     return 2.0 * G.number_of_edges() / (n * (n - 1))
 
 
-# Tight epsilon for detecting 0/1 boundaries (lp_num_fractional, lp_is_integral)
+
 _FRAC_EPS = 1e-6
 
-# Looser epsilon specifically for detecting values at exactly 1/2.
-# LP solvers (e.g. CBC) can return 0.499999 or 0.500001 for what is
-# mathematically 0.5, so 1e-4 is safer here without any risk of
-# misclassifying true 0/1 values (which are never this close to 0.5).
 _HALF_EPS = 1e-4
 
 
@@ -151,19 +148,19 @@ def build_experiment_suite() -> List[Dict]:
         })
 
     # Near-cliques
-    for n, missing_frac, trial in [
-        (12, 0.10, 0), (16, 0.15, 0), (20, 0.20, 0), (20, 0.10, 1)
-    ]:
-        seed = 3000 + trial + n
-        specs.append({
-            "family":     "near_clique",
-            "name":       f"near_clique_n{n}_miss{missing_frac}_t{trial}",
-            "parity":     None,
-            "generator":  generate_near_clique,
-            "kwargs":     {"n": n, "remove_fraction": missing_frac, "seed": seed},
-            "gen_params": {"n": n, "remove_fraction": missing_frac,
-                           "seed": seed, "trial": trial},
-        })
+    for n in [12, 16, 20]:
+        for missing_frac in [0.10, 0.15, 0.20]:
+            for trial in range(2):  
+                seed = 3000 + n + int(missing_frac * 100) + trial
+                specs.append({
+                    "family":     "near_clique",
+                    "name":       f"near_clique_n{n}_miss{missing_frac}_t{trial}",
+                    "parity":     None,
+                    "generator":  generate_near_clique,
+                    "kwargs":     {"n": n, "remove_fraction": missing_frac, "seed": seed},
+                    "gen_params": {"n": n, "remove_fraction": missing_frac,
+                                "seed": seed, "trial": trial},
+                })
 
     return specs
 

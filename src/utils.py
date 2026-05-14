@@ -1,14 +1,7 @@
+# Utility functions for validating and measuring vertex covers.
+
 def is_vertex_cover(G, cover):
-    """
-    Checks whether 'cover' is a vertex cover of graph G.
 
-    Parameters:
-        G (networkx.Graph): input graph
-        cover (iterable): collection of vertices
-
-    Returns:
-        bool: True if cover is a valid vertex cover, False otherwise
-    """
     cover_set = set(cover) ## We covert the iterable into a set for fast membership testing
 
     for u, v in G.edges():
@@ -18,11 +11,4 @@ def is_vertex_cover(G, cover):
     return True
 
 def cover_size(cover):
-    """
-    Parameters:
-        cover (iterable): collection of vertices
-
-    Returns:
-        int: the size of a vertex cover 
-    """
     return len(set(cover))

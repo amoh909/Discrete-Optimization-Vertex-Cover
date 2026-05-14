@@ -1,19 +1,9 @@
+# LP relaxation solver for minimum vertex cover using continuous variables (PuLP/CBC).
+
 import pulp as p
 
 def solve_vertex_cover_lp(G):
-    """
-    Solve the LP relaxation of the Minimum Vertex Cover problem.
 
-    Parameters:
-        G (networkx.Graph): input graph
-
-    Returns:
-        dict: {
-            "status": str,
-            "objective": float,
-            "x_values": dict
-        }
-    """
     Lp_prob = p.LpProblem('Vertex_Cover_LP', p.LpMinimize) 
 
     x = {

@@ -1,3 +1,4 @@
+# Exact ILP solver for minimum vertex cover using binary programming (PuLP/CBC).
 import pulp as p
 
 def solve_vertex_cover_ilp(G): #Generally used on small graphs to have a baseline to compare with
@@ -32,7 +33,7 @@ def solve_vertex_cover_ilp(G): #Generally used on small graphs to have a baselin
     status = p.LpStatus[ILp_prob.status]
     objective = p.value(ILp_prob.objective)
     x_values = {v: p.value(x[v]) for v in G.nodes()}
-    cover = {v for v in G.nodes() if x_values[v] == 1} ## Makes sense here to have a cover unlike the case where we had a relaxed Lp problem
+    cover = {v for v in G.nodes() if x_values[v] >= 0.5} ## Makes sense here to have a cover unlike the case where we had a relaxed Lp problem
 
     return {
         "status": status,

@@ -1,16 +1,6 @@
+# Greedy vertex cover heuristic: iteratively selects the highest-degree vertex.
+
 def greedy_vertex_cover(G):
-    """
-    Computes a vertex cover using a greedy heuristic.
-
-    At each step, the algorithm selects the vertex with the highest degree,
-    adds it to the cover, and removes it along with all its incident edges.
-
-    Parameters:
-        G (networkx.Graph): input graph
-
-    Returns:
-        list: vertices selected by the greedy heuristic
-    """
     remaining_graph = G.copy()  ## Create a copy of the original graph
     cover = set()  ## Stores the vertices selected for the cover
 
